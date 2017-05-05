@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 2.8.4)
+set(CMAKE_USER_MAKE_RULES_OVERRIDE_CXX ${CMAKE_CURRENT_SOURCE_DIR}/cmake/MSVC_cxx_flag_overrides.cmake)
 project(caf C CXX)
 
 # be nice to vim users
@@ -679,6 +680,14 @@ invertYesNo(CAF_NO_PYTHON CAF_BUILD_PYTHON)
 # collect all compiler flags
 string(TOUPPER "${CMAKE_BUILD_TYPE}" UPPER_BUILD_TYPE)
 set(ALL_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${UPPER_BUILD_TYPE}}")
+################################################################################
+#                     Dump possibly overridden C++ compiler flags              #
+################################################################################
+message(STATUS
+        "ALL_CXX_FLAGS=${ALL_CXX_FLAGS}\n")
+message(STATUS
+        "CMAKE_CXX_FLAGS_${UPPER_BUILD_TYPE}=${CMAKE_CXX_FLAGS_${UPPER_BUILD_TYPE}}\n")
+#################################################################################
 # done
 if(NOT CAF_NO_SUMMARY)
   message(STATUS
