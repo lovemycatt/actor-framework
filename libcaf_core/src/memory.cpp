@@ -43,7 +43,7 @@ using cache_map = std::map<const std::type_info*, std::unique_ptr<memory_cache>>
 
 } // namespace <anonymous>
 
-#if defined(CAF_CLANG) || defined(CAF_MACOS)
+#if !defined (CAF_WINDOWS) && (defined(CAF_CLANG) || defined(CAF_MACOS))
 namespace {
 
 pthread_key_t s_key;
