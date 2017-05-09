@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 2.8.4)
-#########set(CMAKE_USER_MAKE_RULES_OVERRIDE_CXX ${CMAKE_CURRENT_SOURCE_DIR}/cmake/MSVC_cxx_flag_overrides.cmake)
 if(MSVC)
   set(CMAKE_CXX_FLAGS_DEBUG_INIT "/D_DEBUG /MTd /Zi /Ob0 /Od /RTC1")
   set(CMAKE_CXX_FLAGS_MINSIZEREL_INIT     "/MT /O1 /Ob1 /D NDEBUG")
@@ -9,23 +8,6 @@ endif()
 
 project(caf)
 message(STATUS "CMAKE_CXX_COMPILER_ID: ${CMAKE_CXX_COMPILER_ID}")
-
-if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang") AND WIN32)
-  foreach(flag_var
-        CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
-        CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
-   if(${flag_var} MATCHES "/MD")
-      string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
-   endif(${flag_var} MATCHES "/MD")
-   if((flag_var EQUAL CMAKE_CXX_FLAGS_DEBUG) OR (flag_var EQUAL CMAKE_CXX_FLAGS_RELWITHDEBINFO))
-    set(flag_var, "${flag_var} -std=c++1z -fms-extensions -g2 -gdwarf-2 -fexceptions")
-   elseif(flag_var EQUAL CMAKE_CXX_FLAGS_MINSIZEREL)
-    set(flag_var, "${flag_var} -std=c++1z -fms-extensions -fexceptions /O1 /Ob1 /D NDEBUG")
-   else()
-    set(flag_var, "${flag_var} -std=c++1z -fms-extensions -fexceptions /O2 /Ob2 /D NDEBUG")
-   endif()
-  endforeach(flag_var)
-endif()
 
 # be nice to vim users
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
