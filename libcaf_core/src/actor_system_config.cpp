@@ -246,9 +246,17 @@ actor_system_config& actor_system_config::parse(message& args,
   for (auto& x : custom_options_)
     cargs.emplace_back(x->to_cli_arg(false));
   using std::placeholders::_1;
+
+#if defined (CAF_WINDOWS) && defined(__clang__)
+  auto res = args.extract_opts(std::move(cargs),
+                               std::bind(&actor_system_config::make_help_text,
+                                         _1));
+#else
   auto res = args.extract_opts(std::move(cargs),
                                std::bind(&actor_system_config::make_help_text,
                                          this, _1));
+#endif
+
   using std::cerr;
   using std::cout;
   using std::endl;

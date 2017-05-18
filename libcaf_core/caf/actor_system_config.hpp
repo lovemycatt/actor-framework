@@ -293,7 +293,19 @@ public:
   int (*slave_mode_fun)(actor_system&, const actor_system_config&);
 
 protected:
+
+#if defined (CAF_WINDOWS) && defined(__clang__)
+/* Patch to fix clang incompatibility with MSVC standard library - 
+   specifically, std::bind problem with member functions of virtual base classes
+   (see https://clang.llvm.org/docs/MSVCCompatibility.html, https://bugs.llvm.org/show_bug.cgi?id=15713).
+   The patch seems sustainable at the moment, as currently make_help_text() needs neither be a virtual 
+   nor a non-static function in CAF or CAF samples.
+   The patch of course prevents derived classes from overriding make_help_text() (on Windows+Clang). 
+*/
+  static std::string make_help_text(const std::vector<message::cli_arg>&);
+#else
   virtual std::string make_help_text(const std::vector<message::cli_arg>&);
+#endif
 
   option_vector custom_options_;
 
