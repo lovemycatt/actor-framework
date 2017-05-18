@@ -316,7 +316,8 @@ private:
 
   std::string extract_config_file_name(message& args);
 
-  option_vector options_;
+protected:
+    option_vector options_;
 };
 
 } // namespace caf
