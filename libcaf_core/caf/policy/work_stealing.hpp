@@ -76,10 +76,13 @@ public:
             {p->system().config().work_stealing_aggressive_poll_attempts, 1,
              p->system().config().work_stealing_aggressive_steal_interval,
              usec{0}},
+
             {p->system().config().work_stealing_moderate_poll_attempts, 1,
              p->system().config().work_stealing_moderate_steal_interval,
              usec{p->system().config().work_stealing_moderate_sleep_duration_us}},
-            {1, 0, p->system().config().work_stealing_relaxed_steal_interval,
+
+		// added: moved from 1 to 0 the number of attempts (see comment in the dequeue method)
+		{0 /* 1*/ , 0, p->system().config().work_stealing_relaxed_steal_interval,
             usec{p->system().config().work_stealing_relaxed_sleep_duration_us}}
           } {
       // nop
@@ -106,6 +109,7 @@ public:
     auto victim = d(self).uniform(d(self).rengine);
     if (victim == self->id())
       victim = p->num_workers() - 1;
+
     // steal oldest element from the victim's queue
     return d(p->worker_by_id(victim)).queue.take_tail();
   }
@@ -152,17 +156,24 @@ public:
         // try to steal every X poll attempts
         if ((i % strat.steal_interval) == 0) {
           job = try_steal(self);
-          if (job)
-            return job;
+          if (job) 
+	      return job;
         }
         if (strat.sleep_duration.count() > 0)
-          std::this_thread::sleep_for(strat.sleep_duration);
+	    std::this_thread::sleep_for(strat.sleep_duration);
       }
     }
-    // unreachable, because the last strategy loops
-    // until a job has been dequeued
+    // added: modified the number of attemps for the relaxed strategy, from 1 to 0 such that we can exit from this function with nullptr
     return nullptr;
   }
+
+
+    // added: checking if there are jobs in the queue (not lock protected)
+    template <class Worker>
+    bool therearejobs(Worker* self) const {
+	return !d(self).queue.empty();
+    }
+
 
   template <class Worker, class UnaryFunction>
   void foreach_resumable(Worker* self, UnaryFunction f) {

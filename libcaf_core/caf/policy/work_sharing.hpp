@@ -97,6 +97,13 @@ public:
     return job;
   }
 
+  // added: checking if there are jobs in the queue (not lock protected)
+  template <class Worker>
+  bool therearejobs(Worker* self) const {
+    auto& parent_data = d(self->parent());
+    return !parent_data.queue.empty();
+  }
+
   template <class Worker, class UnaryFunction>
   void foreach_resumable(Worker*, UnaryFunction) {
     // nop

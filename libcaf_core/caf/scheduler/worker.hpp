@@ -20,7 +20,9 @@
 #ifndef CAF_SCHEDULER_WORKER_HPP
 #define CAF_SCHEDULER_WORKER_HPP
 
+#include <mutex>   // added
 #include <cstddef>
+#include <condition_variable>  // added
 
 #include "caf/logger.hpp"
 #include "caf/resumable.hpp"
@@ -67,6 +69,17 @@ public:
   void external_enqueue(job_ptr job) {
     CAF_ASSERT(job != nullptr);
     policy_.external_enqueue(this, job);
+
+
+    // added
+    { // guard scope 
+      std::unique_lock<std::mutex> guard(lock);
+
+      if (sleeping && policy_.therearejobs(this)) {
+	cv.notify_one(); 
+      }      
+    }
+
   }
 
   /// Enqueues a new job to the worker's queue from an internal
@@ -109,6 +122,21 @@ private:
     // scheduling loop
     for (;;) {
       auto job = policy_.dequeue(this);
+
+      /* added */
+      while(job == nullptr) { // can never happen for the work-sharing policy
+	  
+	  { // guard scope 
+	      std::unique_lock<std::mutex> guard(lock);
+	      sleeping=true;
+	      cv.wait(guard, [&] { return policy_.therearejobs(this); });
+	      sleeping=false;
+	  }
+	  
+	job = policy_.dequeue(this);
+      }
+      /* ----- */
+
       CAF_ASSERT(job != nullptr);
       CAF_ASSERT(job->subtype() != resumable::io_actor);
       CAF_PUSH_AID_FROM_PTR(dynamic_cast<abstract_actor*>(job));
@@ -151,6 +179,11 @@ private:
   policy_data data_;
   // instance of our policy object
   Policy policy_;
+
+  // added
+  std::mutex lock;
+  std::condition_variable cv;
+  bool sleeping{false};
 };
 
 } // namespace scheduler
